@@ -100,7 +100,7 @@ Você pode visualizar esses dados no CSV armazenado no GitHub.
 [Baixar Resultados CSV](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/)
 ```
 
-### 📈 Gráficos
+### 📈 Gráficos Base de dados Original
 
 Para visualizar gráficos gerados pelo modelo, insira imagens hospedadas no GitHub utilizando Markdown:
 
@@ -116,6 +116,22 @@ Distribuição TSNE das classes
 ![Distribuição TSNE das Classes (Síndromes)](https://github.com/HyAgOsK/APOLLO_DEV/blob/main/outputs_original_data_seed0/tsne_plot.png?raw=true)
 
 ---
+
+### 📈 Gráficos Base de dados Downsampling - (proximidade dos embeddings ao centróide)
+
+Para visualizar gráficos gerados pelo modelo, insira imagens hospedadas no GitHub utilizando Markdown:
+
+Distribuição dos dados
+![Distribuição de Classes (Síndromes)](https://github.com/HyAgOsK/APOLLO_DEV/blob/main/outputs_balanced_data_seed0/images_per_syndrome.png?raw=true)
+
+Curva ROC - Média (Cosseno e Euclidiana)
+![Curva ROC](https://github.com/HyAgOsK/APOLLO_DEV/blob/main/outputs_balanced_data_seed0/roc_curve.png?raw=true)
+
+Curva ROC - Cada classe (Cosseno e Euclidiana)
+
+Distribuição TSNE das classes
+![Distribuição TSNE das Classes (Síndromes)](https://github.com/HyAgOsK/APOLLO_DEV/blob/main/outputs_balanced_data_seed0/tsne_plot.png?raw=true)
+
 
 ## 📝 Conclusão
 
