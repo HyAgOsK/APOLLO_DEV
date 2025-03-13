@@ -97,7 +97,7 @@ Aqui estão os principais resultados obtidos durante a execução:
 Você pode visualizar esses dados no CSV armazenado no GitHub.
 
 ```md
-[Baixar Resultados CSV](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/main/results.csv)
+[Baixar Resultados CSV](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/)
 ```
 
 ### 📈 Gráficos
@@ -105,8 +105,10 @@ Você pode visualizar esses dados no CSV armazenado no GitHub.
 Para visualizar gráficos gerados pelo modelo, insira imagens hospedadas no GitHub utilizando Markdown:
 
 ```md
-![Curva ROC](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/main/images/roc_curve.png)
-![Distribuição de Classes](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/main/images/class_distribution.png)
+
+![Curva ROC](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/outputs_original_data_seed0/roc_curve.png)
+![Distribuição TSNE das Classes (Síndromes)](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/outputs_original_data_seed0/tsne_plot.png)
+![Distribuição de Classes (Síndromes)](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/outputs_original_data_seed0/images_per_syndrome.png)
 ```
 
 ---
