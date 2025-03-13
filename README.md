@@ -36,7 +36,7 @@
    ```bash
    wget https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh
    ```
-2. Siga as instruções de instalação:
+2. Siga as instruções de instalação do anaconda:
    [Guia de instalação](https://gist.github.com/kauffmanes/5e74916617f9993bc3479f401dfec7da)
 
 3. Crie e ative um ambiente virtual com Python 3.10:
@@ -62,12 +62,7 @@ cd APOLLO_DEV
 pip install -r requirements.txt
 ```
 
-**Observação:** Algumas bibliotecas já são instaladas pelo Conda ao criar o ambiente virtual. Para verificar as dependências restantes, utilize:
-
-```bash
-pip freeze
-```
-Compare com `requirements.txt` e instale as bibliotecas ausentes.
+**Observação:** Se houver algum problema de dependencias, verifique o python instalado, o ambiente usado também, estou usando anaconda, com WSL Ubuntu.
 
 ---
 
@@ -118,9 +113,7 @@ Para visualizar gráficos gerados pelo modelo, insira imagens hospedadas no GitH
 
 ## 📝 Conclusão
 
-Este projeto implementa um classificador KNN para um conjunto de dados específico, com validação cruzada e ajuste de hiperparâmetros. Os resultados mostram que a configuração com `seed=0` oferece um equilíbrio ideal entre AUC e F1-Score. Além disso, a organização modular permite fácil modificação e reuso do código.
-
-Para contribuições e sugestões, abra uma *issue* no repositório ou entre em contato.
+Este projeto implementa um classificador KNN para um conjunto de dados específico, com validação cruzada e ajuste de hiperparâmetros. Os resultados mostram que a configuração com `seed=0` oferece um equilíbrio ideal entre AUC e F1-Score, precisão, recall entre outras métricas.
 
 📌 **Autor:** Hyago Vieira Lemes Barbosa Silva
 
