@@ -105,13 +105,13 @@ Você pode visualizar esses dados no CSV armazenado no GitHub.
 Para visualizar gráficos gerados pelo modelo, insira imagens hospedadas no GitHub utilizando Markdown:
 
 Distribuição dos dados
-![Distribuição de Classes (Síndromes)](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/outputs_original_data_seed0/images_per_syndrome.png)
+![Distribuição de Classes (Síndromes)](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/tree/main/outputs_original_data_seed0/images_per_syndrome.png)
 
 Curva ROC
-![Curva ROC](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/outputs_original_data_seed0/roc_curve.png)
+![Curva ROC](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/tree/main/outputs_original_data_seed0/roc_curve.png)
 
 Distribuição TSNE das classes
-![Distribuição TSNE das Classes (Síndromes)](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/outputs_original_data_seed0/tsne_plot.png)
+![Distribuição TSNE das Classes (Síndromes)](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/tree/main/outputs_original_data_seed0/tsne_plot.png)
 
 ---
 
