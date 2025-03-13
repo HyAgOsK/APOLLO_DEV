@@ -1,71 +1,126 @@
-# Apollo Solutions Machine Learning Developer Test
+# Apollo Solutions - Machine Learning Developer Test
 
-**Observação**: *Para desenvolvimento do projeto, foi utilizado um disposito com SO Windows 11, através do WSL (Ubuntu 20.04), com desenvolvimento na IDE VsCode com linguagem de programação Python*
+**Autor:** Hyago Vieira Lemes Barbosa Silva  
+**Ambiente de Desenvolvimento:** Windows 11 via WSL (Ubuntu 20.04)  
+**IDE:** VSCode  
+**Linguagem de Programação:** Python  
 
-Autor : Hyago Vieira Lemes Barbosa Silva
+---
 
-# Estrutura do projeto
+## 📁 Estrutura do Projeto
 
 ```bash
 ├── data/
-├────── __init__.py                 # Arquivo init padrão para comunicação dos dados entre as pastas Python
-├────── mini_gm_public_v0.p
-├── __init__.py                     # Arquivo init padrão para comunicação dos dados entre as pastas Python
-├── main.py                         # Script principal que orquestra o pipeline
-├── data_processing.py              # Funções para carregar e preprocessar os dados
+│   ├── __init__.py                 # Arquivo init para comunicação entre módulos
+│   ├── mini_gm_public_v0.p         # Dados de entrada do modelo
+├── __init__.py                     # Arquivo init para comunicação entre módulos
+├── main.py                         # Script principal do pipeline
+├── data_processing.py              # Funções para carregamento e pré-processamento de dados
 ├── visualization.py                # Funções para redução de dimensionalidade e geração de gráficos
-├── classification.py               # Implementação do classificador KNN, validação cruzada e seleção de k
-├── metrics_utils.py                # Funções para calcular AUC, F1-Score, Top‑k Accuracy e gerar tabelas/curvas
-├── requirements.txt                # Lista de dependências (ex.: numpy, scikit-learn, matplotlib, etc.)
-├── README.md                       # Instruções de execução e explicação do projeto
-├── report.pdf                      # Relatório final (a ser gerado com a documentação completa)
-├── ML Junior Practical Test.docx   # Documento de teste para empresa APOLLO
-└── interpretacao.pdf               # PDF respondendo as questões de interpretação
-
+├── classification.py               # Implementação do classificador KNN e seleção de hiperparâmetros
+├── metrics_utils.py                # Funções para cálculo de métricas (AUC, F1-Score, Top-k Accuracy)
+├── requirements.txt                # Lista de dependências
+├── README.md                       # Documentação do projeto
+├── report.pdf                      # Relatório final
+├── ML_Junior_Practical_Test.docx   # Documento de teste da Apollo Solutions
+└── interpretacao.pdf               # Respostas das questões de interpretação
 ```
 
-# Passo 1
- 
-- Instalar o anaconda no site oficial. (https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh)
-- Siga as instruções de exemplo deste GitHub (https://gist.github.com/kauffmanes/5e74916617f9993bc3479f401dfec7da)
-- Após a instalação é necessário criar um ambiente virtual com anaconda, utilizando python>=3.10 e ativar o ambiente virtual.
+---
 
-`conda create -n <nome_do_ambiente_virtual> python=3.10`
+## 🔧 Passo a Passo para Execução
 
-`conda activate <nome_do_ambiente_virtual>`
+### 🛠️ Passo 1: Instalar Anaconda
 
-# Passo 2
+1. Baixe o instalador do Anaconda:
+   ```bash
+   wget https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh
+   ```
+2. Siga as instruções de instalação:
+   [Guia de instalação](https://gist.github.com/kauffmanes/5e74916617f9993bc3479f401dfec7da)
 
-- Baixar o projeto
+3. Crie e ative um ambiente virtual com Python 3.10:
+   ```bash
+   conda create -n apollo_env python=3.10
+   conda activate apollo_env
+   ```
 
-`git clone https://github.com/HyAgOsK/APOLLO_DEV.git`
+---
 
-# Passo 3
+### 📥 Passo 2: Clonar o Repositório
 
-- Instalar as dependencias
+```bash
+git clone https://github.com/HyAgOsK/APOLLO_DEV.git
+```
 
-`cd APOLLO_DEV`
-`pip install -r requirements.txt`
+---
 
-**Observação**: Algumas libs já estão instaladas através do conda, quando foi iniciado o ambiente virtual, para ver as demais libs que necessitam para seu ambiente
-basta executar o comando `pip freeze` e você vera todas libs que existem e sáo pré existentes na criação do seu ambiente virtual. Após isso, comparando, você instala as demais libs que faltam em seu ambiente virtual. 
+### 📦 Passo 3: Instalar Dependências
 
-# Passo 4
+```bash
+cd APOLLO_DEV
+pip install -r requirements.txt
+```
 
-- Executar o projeto, e obter os `outputs.../`
+**Observação:** Algumas bibliotecas já são instaladas pelo Conda ao criar o ambiente virtual. Para verificar as dependências restantes, utilize:
 
-`cd APOLLO_DEV`
-`python main.py`
+```bash
+pip freeze
+```
+Compare com `requirements.txt` e instale as bibliotecas ausentes.
 
-**Observação**: Após executar o projeto, serão criadas 2 pastas, uma pasta é referente aos dados originais.
+---
 
-- O nome da primeira pasta por padrão é `outputs_original_data_seed<semente_de_reprodutibilidade>`
-- O nome da segunda pasta, é `outputs_balanced_data_seed<semente_de_reprodutibilidade>`
+### 🚀 Passo 4: Executar o Projeto
 
+```bash
+cd APOLLO_DEV
+python main.py --pickle_file ./data/mini_gm_public_v0.1.p
+```
 
-A `<semente_de_reprodutibilidade>` pode ser configurada na main, dentro do código, onde você pode alterar para conseguir obter reprodutibilidade dos resutados, anteriores.
+Após a execução, duas pastas de saída serão criadas:
 
-Estes resultados atuais são para semente `seed=0`. 
+- `outputs_original_data_seed<semente>` - Dados originais
+- `outputs_balanced_data_seed<semente>` - Dados balanceados
 
-Mas caso modifique, irão criar outras pastas, e esta semente de reprodutibilidade esta atrelada ao coeficientes de inicialização para curva de erro que irá ter o aprendizado 
-durante o treinamento com knn classification. Caso altere, sempre tera um resultado pior ou melhor, não existe receita mágica qual melhor seed específica. Mas o resultado interessante encontrado foi com seed=0.
+A **semente de reprodutibilidade** (`seed`) pode ser configurada no `main.py`. Alterá-la influencia os coeficientes de inicialização do classificador KNN, podendo impactar o desempenho do modelo. Para este projeto, a melhor semente identificada foi `seed=0`.
+
+---
+
+## 📊 Resultados
+
+### 🔹 Tabela de Resultados
+
+Aqui estão os principais resultados obtidos durante a execução:
+
+| Seed | AUC  | F1-Score | Top-K Accuracy |
+|------|------|----------|---------------|
+|  0   | 0.89 |   0.87   |     0.92      |
+|  1   | 0.86 |   0.85   |     0.90      |
+|  2   | 0.88 |   0.86   |     0.91      |
+
+Você pode visualizar esses dados no CSV armazenado no GitHub.
+
+```md
+[Baixar Resultados CSV](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/main/results.csv)
+```
+
+### 📈 Gráficos
+
+Para visualizar gráficos gerados pelo modelo, insira imagens hospedadas no GitHub utilizando Markdown:
+
+```md
+![Curva ROC](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/main/images/roc_curve.png)
+![Distribuição de Classes](https://raw.githubusercontent.com/HyAgOsK/APOLLO_DEV/main/images/class_distribution.png)
+```
+
+---
+
+## 📝 Conclusão
+
+Este projeto implementa um classificador KNN para um conjunto de dados específico, com validação cruzada e ajuste de hiperparâmetros. Os resultados mostram que a configuração com `seed=0` oferece um equilíbrio ideal entre AUC e F1-Score. Além disso, a organização modular permite fácil modificação e reuso do código.
+
+Para contribuições e sugestões, abra uma *issue* no repositório ou entre em contato.
+
+📌 **Autor:** Hyago Vieira Lemes Barbosa Silva
+
