@@ -113,7 +113,7 @@ Curva ROC - Média (Cosseno e Euclidiana)
 Curva ROC - Cada classe (Cosseno e Euclidiana)
 
 Distribuição TSNE das classes
-![Distribuição TSNE das Classes (Síndromes)](https://github.com/HyAgOsK/APOLLO_DEV/blob/main/outputs_original_data_seed0/tsne_plot.png?raw=true)
+![Distribuição TSNE das Classes (Síndromes)](https://github.com/HyAgOsK/APOLLO_DEV/blob/main/outputs_original_data_seed0/tsne_plot_nonbalanced.png?raw=true)
 
 ---
 
@@ -130,7 +130,7 @@ Curva ROC - Média (Cosseno e Euclidiana)
 Curva ROC - Cada classe (Cosseno e Euclidiana)
 
 Distribuição TSNE das classes
-![Distribuição TSNE das Classes (Síndromes)](https://github.com/HyAgOsK/APOLLO_DEV/blob/main/outputs_balanced_data_seed0/tsne_plot.png?raw=true)
+![Distribuição TSNE das Classes (Síndromes)](https://github.com/HyAgOsK/APOLLO_DEV/blob/main/outputs_balanced_data_seed0/tsne_plot_balanced.png?raw=true)
 
 
 ## 📝 Conclusão

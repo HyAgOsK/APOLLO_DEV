@@ -20,39 +20,125 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 import seaborn as sns
 from scipy.spatial.distance import pdist, squareform
+import matplotlib
 
-def load_and_preprocess_data(picke_file):
+matplotlib.use('Agg')
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+from sklearn.preprocessing import StandardScaler, Normalizer
+import os
+
+def plot_transformation_comparison(data_df, output_file="transformation_comparison.png", output_dir="outputs", seed=42):
     """
-    Carrega o arquivo pickle e realiza o flatten da estrutura hierárquica.
+    Cria dois subconjuntos dos dados:
+      - Um com padronização (StandardScaler)
+      - Outro com normalização L2 (Normalizer)
+    Em seguida, aplica t-SNE em cada conjunto (sem re-escalar) e gera um gráfico com
+    dois subplots (lado a lado) para comparar a projeção dos embeddings para ambas as transformações.
+    
+    Cada subplot é colorido de acordo com o 'syndrome_id'.
+    
+    Parâmetros:
+      - data_df: DataFrame original com coluna 'embedding'
+      - output_file: Nome do arquivo para salvar o gráfico final.
+      - output_dir: Diretório onde o arquivo será salvo.
+      - seed: Semente para reprodutibilidade.
+    """
+    # Empilha os embeddings originais
+    embeddings = np.stack(data_df['embedding'].values)
+    
+    # Cria as transformações:
+    scaler = StandardScaler()
+    X_standardized = scaler.fit_transform(embeddings)
+    
+    normalizer = Normalizer(norm='l2')
+    X_normalized = normalizer.fit_transform(embeddings)
+    
+    # Cria cópias do DataFrame para cada transformação
+    df_standardized = data_df.copy()
+    df_normalized = data_df.copy()
+    
+    # Armazena os embeddings transformados
+    df_standardized['embedding_transformed'] = list(X_standardized)
+    df_normalized['embedding_transformed'] = list(X_normalized)
+    
+    # Aplica t-SNE nos embeddings transformados (sem nova escala)
+    tsne_std = TSNE(n_components=2, random_state=seed, perplexity=30, max_iter=5000).fit_transform(X_standardized)
+    tsne_norm = TSNE(n_components=2, random_state=seed, perplexity=30, max_iter=5000).fit_transform(X_normalized)
+    
+    df_standardized['tsne_x'] = tsne_std[:, 0]
+    df_standardized['tsne_y'] = tsne_std[:, 1]
+    df_normalized['tsne_x'] = tsne_norm[:, 0]
+    df_normalized['tsne_y'] = tsne_norm[:, 1]
+    
+    # Cria um gráfico com 2 subplots
+    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
+    
+    # Subplot para Standardized
+    groups_std = df_standardized.groupby('syndrome_id')
+    for name, group in groups_std:
+        axes[0].scatter(group['tsne_x'], group['tsne_y'], label=name, alpha=0.7, s=30)
+    axes[0].set_title("t-SNE (Padronizado - StandardScaler)")
+    axes[0].set_xlabel("t-SNE 1")
+    axes[0].set_ylabel("t-SNE 2")
+    axes[0].legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    axes[0].grid(True)
+    
+    # Subplot para Normalized
+    groups_norm = df_normalized.groupby('syndrome_id')
+    for name, group in groups_norm:
+        axes[1].scatter(group['tsne_x'], group['tsne_y'], label=name, alpha=0.7, s=30)
+    axes[1].set_title("t-SNE (Normalizado L2 - Normalizer)")
+    axes[1].set_xlabel("t-SNE 1")
+    axes[1].set_ylabel("t-SNE 2")
+    axes[1].legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    axes[1].grid(True)
+    
+    plt.tight_layout()
+    final_path = os.path.join(output_dir, output_file)
+    plt.savefig(final_path, dpi=300)
+    plt.close()
+    print(f"Gráfico de comparação de transformações salvo em: {final_path}")
+
+
+
+import pickle
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import Normalizer
+
+def load_and_preprocess_data(pickle_file):
+    """
+    Carrega o arquivo pickle e realiza o flatten da estrutura hierárquica,
+    normalizando os embeddings com L2 Normalization.
     
     Estrutura dos dados:
-    
-    {
-        'syndrome_id':{
-            'subject_id':{
+      {
+        'syndrome_id': {
+            'subject_id': {
                 'image_id': [320-dimensional embedding]
             }
         }
-    }
+      }
     
     Retorna um DataFrame com as colunas:
+      ['syndrome_id', 'subject_id', 'image_id', 'embedding']
     
-    ['syndrome_id', 'subject_id', 'image_id', 'embedding']
-    
+    Obs.: Após este carregamento, todos os embeddings já estarão normalizados (norma = 1).
     """
     issues = []
     
-    # Abrindo o arquivo pickle fazendo a leitura do arquivo
-    with open(picke_file, 'rb') as f:
+    # 1) Carrega o arquivo pickle
+    with open(pickle_file, 'rb') as f:
         data = pickle.load(f)
         
-    # Flatten da estrutura hierárquica
+    # 2) Flatten da estrutura hierárquica
     records = []
-    
     for syndrome_id, subjects in data.items():
         for subject_id, images in subjects.items():
             for image_id, embedding in images.items():
-                # Verifica se o embedding tem o tamanho correto
                 if embedding is None or subject_id is None or syndrome_id is None or len(embedding) != 320:
                     records.append({
                         'syndrome_id': syndrome_id,
@@ -66,13 +152,23 @@ def load_and_preprocess_data(picke_file):
                         'syndrome_id': syndrome_id,
                         'subject_id': subject_id,
                         'image_id': image_id,
-                        'embedding': np.array(embedding)  # Converte para array numpy
-                    })                    
-                
+                        'embedding': np.array(embedding)  # array numpy (320-dim)
+                    })
     
+    # 3) Cria o DataFrame
     df = pd.DataFrame(records)
     
-    return df, issues            
+    # 4) Aplica L2 Normalization nos embeddings
+    #    (garante que cada vetor terá norma = 1)
+    normalizer = Normalizer(norm='l2')
+    embeddings = np.stack(df['embedding'].values)     # shape (N, 320)
+    embeddings_l2 = normalizer.fit_transform(embeddings)
+    
+    # 5) Substitui os embeddings no DataFrame pelos vetores normalizados
+    df['embedding'] = list(embeddings_l2)
+    
+    return df, issues
+            
 
 
 # =======================
@@ -104,24 +200,21 @@ import pandas as pd
 import numpy as np
 import pandas as pd
 
-def create_balanced_dataset(df, counts, max_factor=2.0, quantile_threshold=0.7):
+import numpy as np
+import pandas as pd
+
+def create_balanced_dataset(df, counts, max_factor=2.0, quantile_threshold=0.7, outlier_quantile=0.95):
     """
-    Cria um conjunto balanceado com base na proximidade dos embeddings ao centróide de cada classe.
+    Cria um conjunto 'balanceado' com base na proximidade dos embeddings ao centróide de cada classe.
+    Além disso, remove outliers em cada classe (acima de outlier_quantile).
     
-    Para cada classe:
-      - Se o número de amostras for menor ou igual ao mínimo (min_count), mantém todas as amostras.
-      - Se for maior:
-          1. Calcula o centróide dos embeddings da classe.
-          2. Computa a distância Euclidiana de cada amostra até o centróide.
-          3. Define um limiar (por exemplo, a mediana dessas distâncias, controlada pelo parâmetro quantile_threshold).
-          4. Seleciona as amostras com distância menor ou igual ao limiar.
-          5. Se o número de amostras selecionadas for inferior a min_count, completa com as amostras mais próximas, até atingir min_count.
-          6. Se o número de amostras selecionadas for superior a max_count (definido como max_factor * min_count), então limita àquelas com as menores distâncias.
-    
-    Retorna:
-       balanced_df: DataFrame resultante com um número balanceado de amostras por classe,
-       balanced_classes: Lista das síndromes cuja quantidade original já era igual a min_count,
-       imbalanced_classes: Lista das síndromes com quantidade acima de min_count.
+    Passos:
+      1. Para cada classe, remove outliers (amostras cujo embedding está acima do outlier_quantile de distância do centróide).
+      2. Se o número de amostras for menor ou igual ao min_count, mantém todas as amostras.
+      3. Caso contrário:
+         - Calcula o centróide.
+         - Define um limiar (quantile_threshold) para selecionar as amostras mais próximas do centróide.
+         - Garante um mínimo de min_count amostras e limita a no máximo max_count (max_factor * min_count).
     """
     min_count = counts.min()
     max_count = int(min_count * max_factor)
@@ -130,35 +223,47 @@ def create_balanced_dataset(df, counts, max_factor=2.0, quantile_threshold=0.7):
     for syndrome, group in df.groupby('syndrome_id'):
         X = np.vstack(group['embedding'].values)
         n = len(group)
+        
+        # Calcula o centróide
+        centroid = X.mean(axis=0)
+        # Distâncias de cada embedding ao centróide
+        distances = np.linalg.norm(X - centroid, axis=1)
+        group = group.copy()
+        group['distance'] = distances
+        
+        # 1) Remove outliers acima do outlier_quantile
+        dist_cutoff = np.quantile(distances, outlier_quantile)
+        group = group[group['distance'] <= dist_cutoff]
+        
+        # Recalcula X após remoção dos outliers
+        X = np.vstack(group['embedding'].values)
+        distances = group['distance'].values
+        n = len(group)
+        
+        # Se após remoção de outliers a classe ficou com <= min_count, mantém todas
         if n <= min_count:
-            balanced_samples.append(group)
-        else:
-            # Calcula o centróide da classe
-            centroid = X.mean(axis=0)
-            # Calcula a distância Euclidiana de cada amostra ao centróide
-            distances = np.linalg.norm(X - centroid, axis=1)
-            group = group.copy()
-            group['distance'] = distances
-            # Define o limiar: amostras abaixo do quantil definido (ex: mediana)
-            threshold = np.quantile(distances, quantile_threshold)
-            selected = group[group['distance'] <= threshold]
-            # Se selecionou menos que min_count, complete com as mais próximas
-            if len(selected) < min_count:
-                selected = group.sort_values(by='distance').iloc[:min_count]
-            # Se selecionar mais que o teto, limite ao máximo permitido
-            elif len(selected) > max_count:
-                selected = group.sort_values(by='distance').iloc[:max_count]
-            balanced_samples.append(selected)
+            balanced_samples.append(group.drop(columns='distance', errors='ignore'))
+            continue
+        
+        # 2) Se ainda houver mais que min_count, aplicamos a lógica de quantile_threshold
+        threshold = np.quantile(distances, quantile_threshold)
+        selected = group[group['distance'] <= threshold]
+        
+        if len(selected) < min_count:
+            # Se selecionou menos que min_count, completa com as mais próximas
+            selected = group.sort_values(by='distance').iloc[:min_count]
+        elif len(selected) > max_count:
+            selected = group.sort_values(by='distance').iloc[:max_count]
+        
+        balanced_samples.append(selected.drop(columns='distance', errors='ignore'))
     
     balanced_df = pd.concat(balanced_samples, axis=0).reset_index(drop=True)
-    if 'distance' in balanced_df.columns:
-        balanced_df.drop(columns=['distance'], inplace=True)
-    
     balanced_classes = counts[counts == min_count].index.tolist()
     imbalanced_classes = counts[counts > min_count].index.tolist()
     
     print(f"Conjunto balanceado criado: min_count = {min_count}, max_count = {max_count}.")
     return balanced_df, balanced_classes, imbalanced_classes
+
 
 
 
@@ -214,99 +319,3 @@ def analyze_embeddings(df, counts, output_prefix="analysis"):
     print(f"Heatmap de correlação salvo em {corr_file}\n\n")
     
     return top_10_syndromes
-
-
-# =======================
-# Função adicional: Análise via PCA e Clustering
-# =======================
-def additional_data_analysis(df, output_dir="outputs", seed=42):
-    """
-    Realiza análise adicional:
-     - Aplica PCA para reduzir os embeddings para 2 dimensões.
-     - Gera scatter plot das componentes principais coloridas por síndrome.
-     - Gera boxplots e histogramas das principais componentes.
-     - Realiza clustering com K-means (n_clusters = número de síndromes) e gera matriz de confusão entre clusters e classes.
-     - Identifica outliers em cada síndrome usando o método IQR nas componentes principais.
-    """
-    
-    # Filtra para as 10 síndromes mais frequentes
-    counts = df.groupby('syndrome_id').size().sort_values(ascending=False)
-    top_10_syndromes = counts.head(10).index.tolist()
-    df_top = df[df['syndrome_id'].isin(top_10_syndromes)].copy()
-    print(f"Analisando as top 10 síndromes: {top_10_syndromes}")
-    
-    # Extração dos embeddings e rótulos
-    embeddings = np.vstack(df['embedding'].values)
-    labels = df['syndrome_id'].values
-
-    # Aplica PCA
-    pca = PCA(n_components=320, random_state=seed)
-    pca_result = pca.fit_transform(embeddings)
-    df['pca1'] = pca_result[:, 0]
-    df['pca2'] = pca_result[:, 1]
-
-    # Scatter plot dos componentes principais
-    plt.figure(figsize=(10, 8))
-    sns.scatterplot(x="pca1", y="pca2", hue="syndrome_id", data=df, palette="tab10", s=40, alpha=0.7)
-    plt.title("PCA dos Embeddings (2 Componentes Principais)")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.tight_layout()
-    pca_scatter_file = os.path.join(output_dir, "pca_scatter.png")
-    plt.savefig(pca_scatter_file, dpi=300)
-    plt.close()
-    print(f"Scatter plot PCA salvo em {pca_scatter_file}")
-
-    # Boxplot e histogramas para pca1 por síndrome
-    plt.figure(figsize=(12, 6))
-    sns.boxplot(x="syndrome_id", y="pca1", data=df, palette="Set3", hue="syndrome_id")
-    plt.title("Distribuição de PCA1 por Síndrome")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    boxplot_file = os.path.join(output_dir, "pca1_boxplot.png")
-    plt.savefig(boxplot_file, dpi=300)
-    plt.close()
-    print(f"Boxplot de PCA1 salvo em {boxplot_file}")
-    
-    # Boxplot e histogramas para pca2 por síndrome
-    plt.figure(figsize=(12, 6))
-    sns.boxplot(x="syndrome_id", y="pca2", data=df, palette="Set3", hue="syndrome_id")
-    plt.title("Distribuição de PCA1 por Síndrome")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    boxplot_file = os.path.join(output_dir, "pca2_boxplot.png")
-    plt.savefig(boxplot_file, dpi=300)
-    plt.close()
-    print(f"Boxplot de PCA1 salvo em {boxplot_file}")
-
-    # Histograma geral de PCA1 e PCA2
-    plt.figure(figsize=(12, 5))
-    plt.subplot(1, 2, 1)
-    sns.histplot(df['pca1'], bins=30, kde=True, color="steelblue")
-    plt.title("Histograma de PCA1")
-    plt.subplot(1, 2, 2)
-    sns.histplot(df['pca2'], bins=30, kde=True, color="salmon")
-    plt.title("Histograma de PCA2")
-    plt.tight_layout()
-    hist_file = os.path.join(output_dir, "pca_histograms.png")
-    plt.savefig(hist_file, dpi=300)
-    plt.close()
-    print(f"Histogramas de PCA1 e PCA2 salvos em {hist_file}")
-    
-    # Identificação de outliers por síndrome usando IQR para PCA1
-    outlier_report = {}
-    for syndrome in np.unique(labels):
-        syndrome_data = df[df['syndrome_id'] == syndrome]
-        Q1 = syndrome_data['pca1'].quantile(0.25)
-        Q3 = syndrome_data['pca1'].quantile(0.75)
-        IQR = Q3 - Q1
-        lower_bound = Q1 - 1.5 * IQR
-        upper_bound = Q3 + 1.5 * IQR
-        outliers = syndrome_data[(syndrome_data['pca1'] < lower_bound) | (syndrome_data['pca1'] > upper_bound)]
-        outlier_report[syndrome] = len(outliers)
-    
-    outlier_df = pd.DataFrame(list(outlier_report.items()), columns=["Syndrome", "Número de Outliers"])
-    outlier_file = os.path.join(output_dir, "pca_outliers_report.csv")
-    outlier_df.to_csv(outlier_file, index=False)
-    print("Relatório de outliers (baseado em PCA1) salvo em", outlier_file)
-    
-    return df, outlier_df

@@ -1,10 +1,3 @@
-"""
---------------------------------------------------------
-                ML Junior Practical Test.
-         @Autor: HYAGO VIEIRA LEMES BAROSA SILVA
---------------------------------------------------------
-"""
-
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
@@ -22,7 +15,8 @@ def run_knn_classification(data_df,
                            seed=42, 
                            top_k=10,
                            output_dir='output_dir',
-                           save_csv=True):
+                           save_csv=True,
+                           store_predictions=False):
     """
     Executa a classificação KNN com duas métricas de distância: Euclidiana e Cosseno.
     Realiza validação cruzada (n_folds) e varre k de 1 a 15.
@@ -32,35 +26,36 @@ def run_knn_classification(data_df,
         além das métricas por classe a partir da matriz de confusão.
       - Métricas de teste: os mesmos.
     
-    Retorna um dicionário com a estrutura:
-      results = {
-         "euclidean": {
-            k: {
-               "train": { "auc": ..., "f1": ..., "accuracy": ..., "precision_macro": ...,
-                          "recall_macro": ..., "top_k": ..., "class_metrics": { ... } },
-               "test": { ... }
-            },
-            ...
-         },
+    Se store_predictions=True, armazena e retorna também as predições do conjunto de teste
+    (rótulos e probabilidades), para uso em plots ROC por classe.
+    
+    Retorna:
+      (results, stored_preds) onde results tem a estrutura:
+      {
+         "euclidean": { k: { "train": {...}, "test": {...} }, ... },
+         "cosine": { ... }
+      }
+      E stored_preds tem a estrutura:
+      {
+         "euclidean": { k: { "y_true": ..., "probs": ... }, ... },
          "cosine": { ... }
       }
     """
-    # Preparação dos dados
     X = np.stack(data_df["embedding"].values)
     y = data_df["syndrome_id"].values
     
-    # Encode dos rótulos para valores numéricos
+    # Codifica os rótulos
     le = LabelEncoder()
     y_encoded = le.fit_transform(y)
     classes = le.classes_
     n_classes = len(classes)
     
-    # Binariza rótulos para AUC multiclass (One-vs-Rest)
+    # Binariza para AUC multiclass
     y_binarized = label_binarize(y_encoded, classes=np.arange(n_classes))
     
     results = {"euclidean": {}, "cosine": {}}
+    stored_preds = {"euclidean": {}, "cosine": {}}
     
-    # Configura validação cruzada
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
     
     for metric in ["euclidean", "cosine"]:
@@ -83,15 +78,18 @@ def run_knn_classification(data_df,
             test_topk_scores = []
             conf_mat_test = np.zeros((n_classes, n_classes), dtype=int)
             
+            # Se armazenar predições, inicializa listas para o conjunto de teste
+            all_test_probs = [] if store_predictions else None
+            all_test_labels = [] if store_predictions else None
+            
             for train_idx, test_idx in skf.split(X, y_encoded):
                 X_train, X_test = X[train_idx], X[test_idx]
                 y_train, y_test = y_encoded[train_idx], y_encoded[test_idx]
                 
-                # Cria o classificador KNN
                 clf = KNeighborsClassifier(n_neighbors=k, metric=metric, algorithm='brute', weights='distance', n_jobs=-1)
                 clf.fit(X_train, y_train)
                 
-                # Métricas para treino
+                # Treino
                 y_pred_train = clf.predict(X_train)
                 probs_train = clf.predict_proba(X_train)
                 conf_mat_train += confusion_matrix(y_train, y_pred_train, labels=np.arange(n_classes))
@@ -108,7 +106,7 @@ def run_knn_classification(data_df,
                 effective_top_k = min(top_k, n_classes - 1) if n_classes > 1 else 1
                 train_topk_scores.append(top_k_accuracy_score(y_train, probs_train, k=effective_top_k))
                 
-                # Métricas para teste
+                # Teste
                 y_pred_test = clf.predict(X_test)
                 probs_test = clf.predict_proba(X_test)
                 conf_mat_test += confusion_matrix(y_test, y_pred_test, labels=np.arange(n_classes))
@@ -123,6 +121,10 @@ def run_knn_classification(data_df,
                 test_prec_scores.append(precision_score(y_test, y_pred_test, average='macro', zero_division=0))
                 test_rec_scores.append(recall_score(y_test, y_pred_test, average='macro', zero_division=0))
                 test_topk_scores.append(top_k_accuracy_score(y_test, probs_test, k=effective_top_k))
+                
+                if store_predictions:
+                    all_test_probs.append(probs_test)
+                    all_test_labels.append(y_test)
             
             # Agregação das métricas (média dos folds)
             train_auc_mean = np.nanmean(train_auc_scores)
@@ -139,7 +141,6 @@ def run_knn_classification(data_df,
             test_rec_mean = np.mean(test_rec_scores)
             test_topk_mean = np.mean(test_topk_scores)
             
-            # Função auxiliar para extrair métricas por classe da matriz de confusão
             def metrics_from_conf_mat(conf_mat):
                 class_info = {}
                 for i in range(n_classes):
@@ -176,35 +177,18 @@ def run_knn_classification(data_df,
                     "class_metrics": test_class_metrics
                 }
             }
+            
+            if store_predictions:
+                # Concatena os resultados de todos os folds
+                all_test_probs = np.concatenate(all_test_probs, axis=0)
+                all_test_labels = np.concatenate(all_test_labels, axis=0)
+                if "test_predictions" not in results[metric][k]:
+                    results[metric][k]["test_predictions"] = {}
+                results[metric][k]["test_predictions"] = {"y_true": all_test_labels, "probs": all_test_probs}
+                stored_preds[metric][k] = {"y_true": all_test_labels, "probs": all_test_probs}
     
     if save_csv:
         os.makedirs(output_dir, exist_ok=True)
-        # Macro metrics CSV
-        rows_macro = []
-        for metric_type in results.keys():
-            for k_val, info in results[metric_type].items():
-                train_info = info["train"]
-                test_info = info["test"]
-                rows_macro.append({
-                    "distance_metric": metric_type,
-                    "k": k_val,
-                    "train_auc": train_info["auc"],
-                    "train_f1": train_info["f1"],
-                    "train_accuracy": train_info["accuracy"],
-                    "train_precision_macro": train_info["precision_macro"],
-                    "train_recall_macro": train_info["recall_macro"],
-                    "train_top_k": train_info["top_k"],
-                    "test_auc": test_info["auc"],
-                    "test_f1": test_info["f1"],
-                    "test_accuracy": test_info["accuracy"],
-                    "test_precision_macro": test_info["precision_macro"],
-                    "test_recall_macro": test_info["recall_macro"],
-                    "test_top_k": test_info["top_k"]
-                })
-        df_macro = pd.DataFrame(rows_macro)
-        df_macro.to_csv(os.path.join(output_dir, "knn_results_macro.csv"), index=False)
-        
-        # Métricas por classe CSV
         rows_per_class = []
         for metric_type in results.keys():
             for k_val, info in results[metric_type].items():
@@ -226,4 +210,7 @@ def run_knn_classification(data_df,
         print(f"[INFO] Resultados macro salvos em: {os.path.join(output_dir, 'knn_results_macro.csv')}")
         print(f"[INFO] Resultados por classe salvos em: {os.path.join(output_dir, 'knn_results_per_class.csv')}")
     
-    return results
+    if store_predictions:
+        return results, stored_preds
+    else:
+        return results
