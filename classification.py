@@ -12,7 +12,7 @@ import os
 def run_knn_classification(data_df, 
                            k_range=range(1, 16), 
                            n_folds=10, 
-                           seed=42, 
+                           seed=0, 
                            top_k=10,
                            output_dir='output_dir',
                            save_csv=True,

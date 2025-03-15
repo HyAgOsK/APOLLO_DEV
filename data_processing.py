@@ -22,26 +22,35 @@ import seaborn as sns
 from scipy.spatial.distance import pdist, squareform
 import matplotlib
 
-matplotlib.use('Agg')
-
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler, Normalizer
 import os
 
-def plot_transformation_comparison(data_df, output_file="transformation_comparison.png", output_dir="outputs", seed=42):
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler, Normalizer
+import os
+
+matplotlib.use('Agg')
+def plot_transformation_comparison(data_df, output_file="transformation_comparison.png", output_dir="outputs", seed=0):
     """
     Cria dois subconjuntos dos dados:
       - Um com padronização (StandardScaler)
       - Outro com normalização L2 (Normalizer)
-    Em seguida, aplica t-SNE em cada conjunto (sem re-escalar) e gera um gráfico com
-    dois subplots (lado a lado) para comparar a projeção dos embeddings para ambas as transformações.
+    Aplica t-SNE em cada conjunto e gera um gráfico com 4 subplots:
+      Linha 1: Projeção t-SNE "pura" (sem clustering) para cada transformação.
+      Linha 2: Projeção t-SNE com overlay de clustering – os centroides (marcados com "X")
+              e círculos delimitadores (definidos pelo percentil 90 das distâncias dos pontos ao centróide).
     
-    Cada subplot é colorido de acordo com o 'syndrome_id'.
+    Cada coluna representa uma transformação:
+      - Coluna 1: Dados padronizados (StandardScaler)
+      - Coluna 2: Dados normalizados L2 (Normalizer)
     
     Parâmetros:
-      - data_df: DataFrame original com coluna 'embedding'
+      - data_df: DataFrame original com a coluna 'embedding'
       - output_file: Nome do arquivo para salvar o gráfico final.
       - output_dir: Diretório onde o arquivo será salvo.
       - seed: Semente para reprodutibilidade.
@@ -49,7 +58,7 @@ def plot_transformation_comparison(data_df, output_file="transformation_comparis
     # Empilha os embeddings originais
     embeddings = np.stack(data_df['embedding'].values)
     
-    # Cria as transformações:
+    # Cria as duas transformações
     scaler = StandardScaler()
     X_standardized = scaler.fit_transform(embeddings)
     
@@ -60,11 +69,11 @@ def plot_transformation_comparison(data_df, output_file="transformation_comparis
     df_standardized = data_df.copy()
     df_normalized = data_df.copy()
     
-    # Armazena os embeddings transformados
+    # Armazena os embeddings transformados (opcional)
     df_standardized['embedding_transformed'] = list(X_standardized)
     df_normalized['embedding_transformed'] = list(X_normalized)
     
-    # Aplica t-SNE nos embeddings transformados (sem nova escala)
+    # Aplica t-SNE para cada transformação
     tsne_std = TSNE(n_components=2, random_state=seed, perplexity=30, max_iter=5000).fit_transform(X_standardized)
     tsne_norm = TSNE(n_components=2, random_state=seed, perplexity=30, max_iter=5000).fit_transform(X_normalized)
     
@@ -73,46 +82,92 @@ def plot_transformation_comparison(data_df, output_file="transformation_comparis
     df_normalized['tsne_x'] = tsne_norm[:, 0]
     df_normalized['tsne_y'] = tsne_norm[:, 1]
     
-    # Cria um gráfico com 2 subplots
-    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
+    # Cria um gráfico com 2 linhas x 2 colunas
+    fig, axes = plt.subplots(2, 2, figsize=(16, 14))
     
-    # Subplot para Standardized
+    # --- Linha 1: Gráficos puros ---
+    # Coluna 1: Standardized (puro)
     groups_std = df_standardized.groupby('syndrome_id')
     for name, group in groups_std:
-        axes[0].scatter(group['tsne_x'], group['tsne_y'], label=name, alpha=0.7, s=30)
-    axes[0].set_title("t-SNE (Padronizado - StandardScaler)")
-    axes[0].set_xlabel("t-SNE 1")
-    axes[0].set_ylabel("t-SNE 2")
-    axes[0].legend(bbox_to_anchor=(1.05, 1), loc="upper left")
-    axes[0].grid(True)
+        axes[0, 0].scatter(group['tsne_x'], group['tsne_y'], label=name, alpha=0.7, s=30)
+    axes[0, 0].set_title("t-SNE (Padronizado - Puro)")
+    axes[0, 0].set_xlabel("t-SNE 1")
+    axes[0, 0].set_ylabel("t-SNE 2")
+    axes[0, 0].legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    axes[0, 0].grid(True)
     
-    # Subplot para Normalized
+    # Coluna 2: Normalized (puro)
     groups_norm = df_normalized.groupby('syndrome_id')
     for name, group in groups_norm:
-        axes[1].scatter(group['tsne_x'], group['tsne_y'], label=name, alpha=0.7, s=30)
-    axes[1].set_title("t-SNE (Normalizado L2 - Normalizer)")
-    axes[1].set_xlabel("t-SNE 1")
-    axes[1].set_ylabel("t-SNE 2")
-    axes[1].legend(bbox_to_anchor=(1.05, 1), loc="upper left")
-    axes[1].grid(True)
+        axes[0, 1].scatter(group['tsne_x'], group['tsne_y'], label=name, alpha=0.7, s=30)
+    axes[0, 1].set_title("t-SNE (Normalizado L2 - Puro)")
+    axes[0, 1].set_xlabel("t-SNE 1")
+    axes[0, 1].set_ylabel("t-SNE 2")
+    axes[0, 1].legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    axes[0, 1].grid(True)
+    
+    # --- Linha 2: Gráficos com Clusters ---
+    # Coluna 1: Standardized com clustering
+    # Aplica KMeans usando k igual ao número de classes únicas
+    unique_std = df_standardized['syndrome_id'].unique()
+    k_std = len(unique_std)
+    kmeans_std = KMeans(n_clusters=k_std, random_state=seed)
+    clusters_std = kmeans_std.fit_predict(tsne_std)
+    df_standardized['cluster'] = clusters_std
+    groups_std = df_standardized.groupby('syndrome_id')
+    for name, group in groups_std:
+        axes[1, 0].scatter(group['tsne_x'], group['tsne_y'], label=name, alpha=0.7, s=30)
+    # Plota os centroides e círculos para Standardized
+    centroids_std = kmeans_std.cluster_centers_
+    axes[1, 0].scatter(centroids_std[:, 0], centroids_std[:, 1], marker="X", s=200, c="black", label="Centroides")
+    # Para cada cluster, plota um círculo delimitador (percentil 90)
+    for i, centroid in enumerate(centroids_std):
+        cluster_points = df_standardized[df_standardized['cluster'] == i]
+        distances = np.sqrt((cluster_points['tsne_x'] - centroid[0])**2 + (cluster_points['tsne_y'] - centroid[1])**2)
+        radius = np.percentile(distances, 90)
+        circle = plt.Circle(centroid, radius, color='black', fill=False, linestyle='--', linewidth=2, alpha=0.7)
+        axes[1, 0].add_patch(circle)
+    axes[1, 0].set_title("t-SNE (Padronizado + Clusters)")
+    axes[1, 0].set_xlabel("t-SNE 1")
+    axes[1, 0].set_ylabel("t-SNE 2")
+    axes[1, 0].legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    axes[1, 0].grid(True)
+    
+    # Coluna 2: Normalized com clustering
+    unique_norm = df_normalized['syndrome_id'].unique()
+    k_norm = len(unique_norm)
+    kmeans_norm = KMeans(n_clusters=k_norm, random_state=seed)
+    clusters_norm = kmeans_norm.fit_predict(tsne_norm)
+    df_normalized['cluster'] = clusters_norm
+    groups_norm = df_normalized.groupby('syndrome_id')
+    for name, group in groups_norm:
+        axes[1, 1].scatter(group['tsne_x'], group['tsne_y'], label=name, alpha=0.7, s=30)
+    centroids_norm = kmeans_norm.cluster_centers_
+    axes[1, 1].scatter(centroids_norm[:, 0], centroids_norm[:, 1], marker="X", s=200, c="black", label="Centroides")
+    for i, centroid in enumerate(centroids_norm):
+        cluster_points = df_normalized[df_normalized['cluster'] == i]
+        distances = np.sqrt((cluster_points['tsne_x'] - centroid[0])**2 + (cluster_points['tsne_y'] - centroid[1])**2)
+        radius = np.percentile(distances, 90)
+        circle = plt.Circle(centroid, radius, color='black', fill=False, linestyle='--', linewidth=2, alpha=0.7)
+        axes[1, 1].add_patch(circle)
+    axes[1, 1].set_title("t-SNE (Normalizado L2 + Clusters)")
+    axes[1, 1].set_xlabel("t-SNE 1")
+    axes[1, 1].set_ylabel("t-SNE 2")
+    axes[1, 1].legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    axes[1, 1].grid(True)
     
     plt.tight_layout()
     final_path = os.path.join(output_dir, output_file)
     plt.savefig(final_path, dpi=300)
     plt.close()
-    print(f"Gráfico de comparação de transformações salvo em: {final_path}")
+    print(f"Gráfico de comparação de transformações (puro e com clusters) salvo em: {final_path}")
 
 
 
-import pickle
-import numpy as np
-import pandas as pd
-from sklearn.preprocessing import Normalizer
 
 def load_and_preprocess_data(pickle_file):
     """
-    Carrega o arquivo pickle e realiza o flatten da estrutura hierárquica,
-    normalizando os embeddings com L2 Normalization.
+    Carrega o arquivo pickle e realiza o flatten da estrutura hierárquica.
     
     Estrutura dos dados:
       {
@@ -123,10 +178,14 @@ def load_and_preprocess_data(pickle_file):
         }
       }
     
-    Retorna um DataFrame com as colunas:
+    Retorna três DataFrames com as colunas:
       ['syndrome_id', 'subject_id', 'image_id', 'embedding']
     
-    Obs.: Após este carregamento, todos os embeddings já estarão normalizados (norma = 1).
+    - df_original: embeddings originais (tipo numpy.array)
+    - df_normalizado: embeddings com L2 Normalization (norma = 1)
+    - df_padronizado: embeddings com padronização (z-score: média 0, desvio padrão 1)
+    
+    Obs.: Se um embedding for inválido, é registrado em issues.
     """
     issues = []
     
@@ -155,19 +214,24 @@ def load_and_preprocess_data(pickle_file):
                         'embedding': np.array(embedding)  # array numpy (320-dim)
                     })
     
-    # 3) Cria o DataFrame
-    df = pd.DataFrame(records)
+    # 3) Cria o DataFrame original
+    df_original = pd.DataFrame(records)
     
-    # 4) Aplica L2 Normalization nos embeddings
-    #    (garante que cada vetor terá norma = 1)
+    # 4) Cria o DataFrame com L2 Normalization
+    df_normalizado = df_original.copy()
     normalizer = Normalizer(norm='l2')
-    embeddings = np.stack(df['embedding'].values)     # shape (N, 320)
+    embeddings = np.stack(df_original['embedding'].values)     # shape (N, 320)
     embeddings_l2 = normalizer.fit_transform(embeddings)
+    df_normalizado['embedding'] = list(embeddings_l2)
     
-    # 5) Substitui os embeddings no DataFrame pelos vetores normalizados
-    df['embedding'] = list(embeddings_l2)
+    # 5) Cria o DataFrame com padronização (z-score)
+    df_padronizado = df_original.copy()
+    scaler = StandardScaler()
+    embeddings_std = scaler.fit_transform(embeddings)  # Aplicado sobre os dados originais
+    df_padronizado['embedding'] = list(embeddings_std)
     
-    return df, issues
+    return df_original, df_normalizado, df_padronizado, issues
+
             
 
 
