@@ -27,14 +27,9 @@ from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler, Normalizer
 import os
 
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler, Normalizer
-import os
 
 matplotlib.use('Agg')
+
 def plot_transformation_comparison(data_df, output_file="transformation_comparison.png", output_dir="outputs", seed=0):
     """
     Cria dois subconjuntos dos dados:

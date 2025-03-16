@@ -15,13 +15,6 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import os
 
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-import os
-
 def plot_tsne(data_df, output_file='tsne_normal_clustering.png', output_dir='outputs_balanced_data', seed=0):
     """
     Gera uma figura com dois subplots lado a lado a partir dos embeddings:
