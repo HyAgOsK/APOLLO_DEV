@@ -106,9 +106,7 @@ def plot_transformation_comparison(data_df, output_file="transformation_comparis
     axes[0, 1].legend(bbox_to_anchor=(1.05, 1), loc="upper left")
     axes[0, 1].grid(True)
     
-    # --- Linha 2: Gráficos com Clusters ---
     # Coluna 1: Standardized com clustering
-    # Aplica KMeans usando k igual ao número de classes únicas
     unique_std = df_standardized['syndrome_id'].unique()
     k_std = len(unique_std)
     kmeans_std = KMeans(n_clusters=k_std, random_state=seed)
@@ -161,7 +159,6 @@ def plot_transformation_comparison(data_df, output_file="transformation_comparis
     plt.savefig(final_path, dpi=300)
     plt.close()
     print(f"Gráfico de comparação de transformações (puro e com clusters) salvo em: {final_path}")
-
 
 
 
@@ -233,11 +230,6 @@ def load_and_preprocess_data(pickle_file):
     return df_original, df_normalizado, df_padronizado, issues
 
             
-
-
-# =======================
-# Função para gerar gráfico da distribuição de imagens por síndrome
-# =======================
 def plot_images_distribution(df, output_file="images_per_syndrome.png"):
     """
     Gera e salva um gráfico de barras mostrando o número de imagens por síndrome.
@@ -254,20 +246,7 @@ def plot_images_distribution(df, output_file="images_per_syndrome.png"):
     print(f"Gráfico salvo em {output_file}")
     return counts
 
-# =======================
-# Função para criar conjunto balanceado via undersampling
-# =======================
-
-import numpy as np
-import pandas as pd
-
-import numpy as np
-import pandas as pd
-
-import numpy as np
-import pandas as pd
-
-def create_balanced_dataset(df, counts, max_factor=2.0, quantile_threshold=0.7, outlier_quantile=0.95):
+def create_balanced_dataset(df, counts, max_factor=1.5, quantile_threshold=0.7, outlier_quantile=0.95):
     """
     Cria um conjunto 'balanceado' com base na proximidade dos embeddings ao centróide de cada classe.
     Além disso, remove outliers em cada classe (acima de outlier_quantile).
@@ -330,10 +309,6 @@ def create_balanced_dataset(df, counts, max_factor=2.0, quantile_threshold=0.7, 
 
 
 
-
-# =======================
-# Função para analisar embeddings e gerar matrizes de similaridade e correlação
-# =======================
 def analyze_embeddings(df, counts, output_prefix="analysis"):
     """
     Seleciona as 10 síndromes mais frequentes, calcula o embedding médio de cada uma,

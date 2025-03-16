@@ -1,3 +1,13 @@
+"""
+--------------------------------------------------------
+
+                ML Junior Practical Test.
+
+         @Autor: HYAGO VIEIRA LEMES BAROSA SILVA
+         
+--------------------------------------------------------
+"""
+# Importando das bibliotecas necessárias
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE

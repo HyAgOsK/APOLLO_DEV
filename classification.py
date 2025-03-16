@@ -1,3 +1,13 @@
+"""
+--------------------------------------------------------
+
+                ML Junior Practical Test.
+
+         @Autor: HYAGO VIEIRA LEMES BAROSA SILVA
+         
+--------------------------------------------------------
+"""
+# Importação das bibliotecas necessárias
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
@@ -50,9 +60,6 @@ def run_knn_classification(data_df,
     classes = le.classes_
     n_classes = len(classes)
     
-    # Binariza para AUC multiclass
-    y_binarized = label_binarize(y_encoded, classes=np.arange(n_classes))
-    
     results = {"euclidean": {}, "cosine": {}}
     stored_preds = {"euclidean": {}, "cosine": {}}
     
@@ -86,7 +93,7 @@ def run_knn_classification(data_df,
                 X_train, X_test = X[train_idx], X[test_idx]
                 y_train, y_test = y_encoded[train_idx], y_encoded[test_idx]
                 
-                clf = KNeighborsClassifier(n_neighbors=k, metric=metric, algorithm='brute', weights='distance', n_jobs=-1)
+                clf = KNeighborsClassifier(n_neighbors=k, metric=metric, algorithm='auto', weights='distance', n_jobs=-1)
                 clf.fit(X_train, y_train)
                 
                 # Treino

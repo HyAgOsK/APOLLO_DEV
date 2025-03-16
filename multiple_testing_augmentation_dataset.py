@@ -7,7 +7,7 @@
          
 --------------------------------------------------------
 """
-
+# Importação das bibliotecas necessárias
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -17,10 +17,11 @@ from sklearn.manifold import TSNE
 from imblearn.over_sampling import SMOTE
 
 
-def plot_syndrome_distribution(df, title="Distribuição por síndrome", name=None, output_dir="testing_augmentation", output_file="syndrome_distribution.png"):
-    counts = df['syndrome_id'].value_counts().sort_index()
+def plot_syndrome_distribution(df, title="Distribuição de imagens por síndrome", name=None, output_dir="images_per_syndrome", output_file="syndrome_distribution.png"):
+    """ Função para plotar a distribuição de imagens por síndrome """
+    counts = df.groupby('syndrome_id').size().sort_values(ascending=False)
     plt.figure(figsize=(8,5))
-    counts.plot(kind='bar')
+    counts.plot(kind='bar', color='skyblue')
     plt.title(title)
     plt.xlabel("Syndrome ID")
     plt.ylabel("Número de amostras")
@@ -34,13 +35,12 @@ def smote_augmentation(df, random_state=0, k_neighbors=5):
     Aplica SMOTE para criar embeddings sintéticos das classes minoritárias.
     Retorna um novo DataFrame balanceado.
     """
-    X = np.stack(df['embedding'].values)  # (N, 320) por exemplo
+    X = np.stack(df['embedding'].values) 
     y = df['syndrome_id'].values
     
     smote = SMOTE(k_neighbors=k_neighbors, random_state=random_state)
     X_res, y_res = smote.fit_resample(X, y)
     
-    # Reconstruir DataFrame
     data_smote = []
     for i, (emb, label) in enumerate(zip(X_res, y_res)):
         data_smote.append({
@@ -53,9 +53,6 @@ def smote_augmentation(df, random_state=0, k_neighbors=5):
     df_smote = pd.DataFrame(data_smote)
     return df_smote
 
-# -----------------------------
-# 2) Função Ruído (Noise)
-# -----------------------------
 def noise_augmentation(df, noise_std=0.01, n_new_per_sample=1):
     """
     Aplica uma perturbação gaussiana (ruído) de desvio padrão noise_std
@@ -76,13 +73,9 @@ def noise_augmentation(df, noise_std=0.01, n_new_per_sample=1):
             new_row['embedding'] = noisy_embedding
             augmented_rows.append(new_row)
     
-    # Concatena o original com os dados ruidosos
     df_noisy = pd.concat([df, pd.DataFrame(augmented_rows)], ignore_index=True)
     return df_noisy
 
-# -----------------------------
-# 3) Função Mixup
-# -----------------------------
 def mixup_augmentation(df, n_samples=1000, alpha=0.5, random_state=0):
     """
     Gera 'n_samples' novos embeddings por Mixup, escolhendo pares aleatórios 
@@ -90,23 +83,19 @@ def mixup_augmentation(df, n_samples=1000, alpha=0.5, random_state=0):
     """
     rnd = np.random.RandomState(random_state)
     
-    # Agrupar por síndrome
     grouped = df.groupby('syndrome_id')
     
     mixup_data = []
     for _ in range(n_samples):
-        # Escolhe uma síndrome ao acaso (ponderado pelo tamanho do grupo, se quiser)
         syndrome_id = rnd.choice(df['syndrome_id'].unique())
         group = grouped.get_group(syndrome_id)
         
-        # Pega dois exemplos aleatórios do mesmo grupo
         row1 = group.sample(1, random_state=rnd).iloc[0]
         row2 = group.sample(1, random_state=rnd).iloc[0]
         
         emb1 = row1['embedding']
         emb2 = row2['embedding']
         
-        # Interpolação
         new_emb = alpha * emb1 + (1 - alpha) * emb2
         
         mixup_data.append({
@@ -117,6 +106,5 @@ def mixup_augmentation(df, n_samples=1000, alpha=0.5, random_state=0):
         })
     
     df_mixup_new = pd.DataFrame(mixup_data)
-    # Concatena original com os sintéticos
     df_mixup = pd.concat([df, df_mixup_new], ignore_index=True)
     return df_mixup

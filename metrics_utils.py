@@ -1,3 +1,13 @@
+"""
+--------------------------------------------------------
+
+                ML Junior Practical Test.
+
+         @Autor: HYAGO VIEIRA LEMES BAROSA SILVA
+         
+--------------------------------------------------------
+"""
+# Importação das bibliotecas necessárias
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
@@ -98,7 +108,7 @@ def plot_true_roc_curves_both(stored_preds, n_classes, k_value=10, output_file="
       - output_dir: diretório onde o arquivo será salvo.
     """
     metrics = ["euclidean", "cosine"]
-    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
+    _, axes = plt.subplots(1, 2, figsize=(16, 8))
     
     for idx, metric in enumerate(metrics):
         data = stored_preds[metric][k_value]
@@ -171,10 +181,9 @@ def generate_performance_table(results):
     return table
 
 
-# Função para calcular o índice composto
-def composite_score(auc, f1, accuracy, precision, recall, top_k):
-    # Se uma das métricas for zero (ou muito baixa), a média geométrica também será baixa.
-    return (auc * f1 * accuracy * precision * recall * top_k) ** (1/6)
+def composite_score(auc, f1, top_k):
+    """" Calcula o escore composto (média geométrica) de três métricas."""
+    return (auc * f1 * top_k) ** (1/3)
     
     
 def plot_class_metrics_merged(results, metric_name="precision", split="test", output_file="class_metrics_merged.png", output_dir="outputs_balanced_data"):
