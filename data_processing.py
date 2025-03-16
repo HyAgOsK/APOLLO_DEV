@@ -12,8 +12,6 @@
 import pickle
 import numpy as np
 import pandas as pd
-import os
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix
