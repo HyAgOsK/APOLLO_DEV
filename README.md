@@ -66,7 +66,10 @@
 
    ```bash
    sudo apt-get install python3-pip -y
+
+   
    ```
+   **Observação**: O pip do projeto que estou usando possui a versão pip 25.0. Caso instale outra versão sugiro alterar para esta.
 
    ### 5. Executar o WSL no Windows
    Abra um terminal no **PowerShell** e digite:
@@ -122,6 +125,7 @@
 git clone https://github.com/HyAgOsK/APOLLO_DEV.git
 ```
 
+**Observação:** Caso tenha o arquivo zip, basta descompacta-lo, e entrar na pasta principal `APOLLO_DEV-main/`
 ---
 
 ### 📦 Passo 3: Instalar Dependências
@@ -131,7 +135,7 @@ cd APOLLO_DEV
 pip install -r requirements.txt
 ```
 
-**Observação:** Se houver algum problema de dependencias, verifique o python instalado, o ambiente usado também, estou usando anaconda, com WSL Ubuntu.
+**Observação:** Se houver algum problema de dependencias, verifique o python e pip instalado, conforme comentei, o ambiente virtual usado é anaconda, com WSL Ubuntu. A versão do pip 25.0. Python 3.10.
 
 ---
 
