@@ -154,6 +154,11 @@ A **semente de reprodutibilidade** (`seed`) pode ser configurada no `main.py`. A
 
 ---
 
+## 📈 Resultados
+
+- Os resultados, discussões e toda análise do projeto, está no arquivo Report.pdf
+- As respostas para as perguntas de interpretação, estão no arquivo Interpretation.pdf
+
 ## 📝 Conclusão
 
 Este projeto implementa um classificador KNN para um conjunto de dados específico, com validação cruzada e ajuste de hiperparâmetros. Os resultados mais promissores foram com base de dados balanceadas, com normalização L2 aplicada, aos dados. Mixup também foi grande satisfatória, porém não se sabe sobre as imagens verdadeiras apenas os embeddings das imagens, com isso apenas as características, é complicado ainda mais por se tratar de imagens de síndrome, são delicadas as características, ou seja, qualquer modificação artificial pode gerar uma anomalia, ou seja, artificialmente é melhor fazer isso nas imagens originais, aplicando sim MIXUP, GANS, PIX2PIX, PATHOLOGY GAN, DATA-AGUMENTATION. Enfim.
