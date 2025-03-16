@@ -106,8 +106,6 @@
    Dentro do arquivo, procure pela entrada indicando a instalação do Anaconda. Se a pasta `anaconda3` estiver presente, a instalação foi concluída com sucesso.
 
    ---
-   Esse guia fornece um passo a passo detalhado para instalar e configurar o WSL e o Anaconda no Windows. Se precisar de mais suporte, entre em contato!
-
 
 
 3. Crie e ative um ambiente virtual com Python 3.10:
