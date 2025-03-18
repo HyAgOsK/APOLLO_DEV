@@ -5,7 +5,6 @@
 **IDE:** VSCode  
 **Linguagem de Programação:** Python  
 
-**Projeto GitHub**: https://github.com/HyAgOsK/APOLLO_DEV
 ---
 
 ## 📁 Estrutura do Projeto
