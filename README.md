@@ -14,18 +14,19 @@
 ├── data/
 │   ├── __init__.py                          # Arquivo init para comunicação entre arquivos python em diferentes repositorios
 │   ├── mini_gm_public_v0.p                  # Dados de entrada do modelo
-├── __init__.py                              # Arquivo init para comunicação entre arquivos python em diferentes repositorios
-├── main.py                                  # Script principal do pipeline
-├── data_processing.py                       # Funções para carregamento e pré-processamento de dados
-├── visualization.py                         # Funções para redução de dimensionalidade e geração de gráficos
+├── __init__.py                              # Arquivo init para comunicação entre arquivos python em diferentes repositorios   
 ├── classification.py                        # Implementação do classificador KNN e seleção de hiperparâmetros
+├── data_processing.py                       # Funções para carregamento e pré-processamento de dados
+├── interpretation.pdf                       # Respostas das questões de interpretação
+├── main.py                                  # Script principal do pipeline
 ├── metrics_utils.py                         # Funções para cálculo de métricas (AUC, F1-Score, Top-k Accuracy)
+├── ML_Junior_Practical_Test.docx            # Documento de teste da Apollo Solutions
 ├── multiple_testing_augmentation_dataset.py # Funções para aumento de dados, análise descritiva dos aumentos de dados (NOISE, MIXUP, SMOTE)
-├── requirements.txt                         # Lista de dependências
 ├── README.md                                # Documentação do projeto
 ├── Report.pdf                               # Relatório final
-├── ML_Junior_Practical_Test.docx            # Documento de teste da Apollo Solutions
-└── interpretation.pdf                       # Respostas das questões de interpretação
+├── requirements.txt                         # Lista de dependências
+└── visualization.py                         # Funções para redução de dimensionalidade e geração de gráficos
+
 ```
 
 ---
