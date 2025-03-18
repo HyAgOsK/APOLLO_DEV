@@ -5,6 +5,7 @@
 **IDE:** VSCode  
 **Linguagem de Programação:** Python  
 
+**Projeto GitHub**: !["APOLLO_PROJECT_GITHUB"](https://github.com/HyAgOsK/APOLLO_DEV)
 ---
 
 ## 📁 Estrutura do Projeto
