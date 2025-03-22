@@ -28,27 +28,23 @@ from multiple_testing_augmentation_dataset import (
 )
 
 class Utils:
-    @staticmethod
-    def print_header(title: str):
+    def print_header(title):
         """ Função que printa o header do PIPE LINE """
         header = f"\n{'-' * 70}\n{title}\n{'-' * 70}\n"
         print(header)
 
-    @staticmethod
-    def create_dir(directory: str):
+    def create_dir(directory):
         """ Função que cria os diretórios """
         os.makedirs(directory, exist_ok=True)
         return directory
 
-    @staticmethod
-    def save_dataset(df: pd.DataFrame, output_dir: str, filename: str, description: str):
+    def save_dataset(df, output_dir, filename, description):
         """ Função que salva o dataset """
         path = os.path.join(output_dir, filename)
         df.to_csv(path, index=False)
         print(f"{description} salvo em {path}\n")
 
-    @staticmethod
-    def save_issues(issues, output_dir: str):
+    def save_issues(issues, output_dir):
         """
         Função que salva e verifica os problemas de integridade além do load_and_preprocess_data 
         que retorna os dados originais, normalizados, padronizados e os problemas de integridade, 
@@ -63,8 +59,7 @@ class Utils:
         else:
             print("Nenhum problema de integridade encontrado.\n")
 
-    @staticmethod
-    def print_distribution(data: pd.DataFrame, label: str, output_dir: str):
+    def print_distribution(data, label, output_dir):
         """ Função que printa a distribuição quantitativa dos dados """
         
         print(f"Distribuição de imagens por síndrome ({label}):")
@@ -126,7 +121,7 @@ class PipelineStep:
 
 class PreprocessingPipeline(PipelineStep):
     """Carrega e pré-processa os dados originais."""
-    def __init__(self, pickle_file: str, seed: int):
+    def __init__(self, pickle_file, seed):
         self.pickle_file = pickle_file
         self.seed = seed
         self.output_dir = Utils.create_dir(f"outputs_original_data_seed{seed}")
@@ -149,7 +144,7 @@ class PreprocessingPipeline(PipelineStep):
 
 class TransformationPipeline(PipelineStep):
     """Gera transformações e plots (t-SNE e comparação de transformações)."""
-    def __init__(self, data: pd.DataFrame, output_dir: str, file_prefix: str, seed: int):
+    def __init__(self, data, output_dir, file_prefix, seed):
         self.data = data
         self.output_dir = output_dir
         self.file_prefix = file_prefix
@@ -158,7 +153,7 @@ class TransformationPipeline(PipelineStep):
     def run(self):
         plot_transformation_comparison(
             self.data, 
-            output_file=f"{self.file_prefix}_transformation.png", 
+            output_file=f"{self.file_prefix}_transformation_tsne.png", 
             output_dir=self.output_dir, 
             seed=self.seed
         )
@@ -167,7 +162,7 @@ class TransformationPipeline(PipelineStep):
 
 class KNNPipeline(PipelineStep):
     """Executa a classificação KNN e gera os plots de performance."""
-    def __init__(self, data: pd.DataFrame, output_dir: str, label: str, seed: int):
+    def __init__(self, data, output_dir, label, seed):
         self.data = data
         self.output_dir = output_dir
         self.label = label
@@ -215,7 +210,7 @@ class KNNPipeline(PipelineStep):
 
 class MixupPipeline(PipelineStep):
     """Realiza augmentação Mixup e gera os plots correspondentes."""
-    def __init__(self, data: pd.DataFrame, output_dir: str, label: str, seed: int, mixup_kwargs: dict):
+    def __init__(self, data, output_dir, label, seed, mixup_kwargs):
         self.data = data
         self.output_dir = output_dir
         self.label = label
@@ -234,7 +229,7 @@ class MixupPipeline(PipelineStep):
 
 class BalancedDataPipeline(PipelineStep):
     """Cria e salva os dados balanceados, realizando também transformações e classificação."""
-    def __init__(self, pickle_file: str, counts_orig, seed: int):
+    def __init__(self, pickle_file, counts_orig, seed):
         self.pickle_file = pickle_file
         self.counts_orig = counts_orig
         self.seed = seed
@@ -270,7 +265,7 @@ class BalancedDataPipeline(PipelineStep):
 
 class PipelineRunner:
     """ Executa todos os passos do pipeline e exibe os resultados. """
-    def __init__(self, pickle_file: str, seed: int = 0):
+    def __init__(self, pickle_file, seed = 0):
         self.pickle_file = pickle_file
         self.seed = seed
         self.pipeline_results = {}  # Armazenará o composite score de cada configuração
